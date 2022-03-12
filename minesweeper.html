@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Minesweeper</title>
+        <style>
+            body {
+                background-color: black;
+                text-align: center;
+                margin: 0px;
+                font-size: medium;
+                font-family: Courier;
+                user-select: none;
+            }
+            .hidden_value {
+                visibility: hidden;
+            }
+            .selected_cell {
+                background-color: #808080;
+                margin: 0px;
+                vertical-align: middle;
+                text-align: center;
+                color: black;
+            }
+            .mine_cell {
+                background-color: red;
+                margin: 0px;
+                color: black;
+                vertical-align: middle;
+            }
+            .unselected_cell {
+                background-color: white;
+                margin: 0px;
+                color: rgba(0, 0, 0, 0)
+            }
+            .unselected_cell:hover {
+                background-color: #b0b0b0;
+                margin: 0px;
+            }
+            /*.button_on {
+
+            }*/
+        </style>
+        <script>
+            var liveGame = true;
+            var mouseX = 0, mouseY = 0;
+            var x_size = Math.floor(window.innerWidth / 25);
+            var y_size = Math.floor(window.innerHeight / 25);
+            var findNeighbors = function(grid, x, y) {
+                var neighbors = 0;
+                if (y > 0) {
+                    neighbors += grid[y - 1][x];
+                    if(x > 0) {
+                        neighbors += grid[y - 1][x - 1];
+                    }
+                    if(x < grid[0].length - 1) {
+                        neighbors += grid[y - 1][x + 1];
+                    }
+                }
+                if (y < grid.length - 1) {
+                    neighbors += grid[y + 1][x];
+                    if(x > 0) {
+                        neighbors += grid[y + 1][x - 1];
+                    }
+                    if(x < grid[0].length - 1) {
+                        neighbors += grid[y + 1][x + 1];
+                    }
+                }
+                if (x > 0) {
+                    neighbors += grid[y][x - 1];
+                }
+                if (x < grid[0].length - 1) {
+                    neighbors += grid[y][x + 1];
+                }
+                return neighbors;
+            };
+            var game = [];
+            var text_grid = [];
+            var revealed = [];
+            var flooded = [];
+            var flagged = [];
+            var mine_count = Math.floor(x_size * y_size * 0.15);
+            var keys = [];
+            for (var i = 0; i < y_size; i ++) {
+                game.push([]);
+                text_grid.push([]);
+                revealed.push([]);
+                flooded.push([]);
+                flagged.push([]);
+                for (var j = 0; j < x_size; j ++) {
+                    game[i].push(0);
+                    text_grid[i].push("");
+                    revealed[i].push(false);
+                    flooded[i].push(false);
+                    flagged[i].push(false);
+                }
+            }
+            //console.log(game);
+            for (var i = 0; i < mine_count; i ++) {
+                var done = false;
+                while(!done) {
+                    var r_x = Math.floor(Math.random() * x_size);
+                    var r_y = Math.floor(Math.random() * y_size);
+                    if (game[r_y][r_x] == 0) {
+                        game[r_y][r_x] = 1;
+                        // console.log(r_x + ", " + r_y);
+                        done = true;
+                    }
+                }
+            }
+            for (var i = 0; i < y_size; i ++) {
+                for (var j = 0; j < x_size; j ++) {
+                    
+                    //console.log(String(findNeighbors(game, j, i)));
+                    if (game[i][j] == 1) {
+                        text_grid[i][j] = "x";
+                    }
+                    else if (findNeighbors(game, j, i) > 0) {
+                        text_grid[i][j] = String(findNeighbors(game, j, i));
+                    }
+                }
+            }
+            window.alert("Welcome! There are " + mine_count + " mines! Press shift while hovering over a mine to flag it so you can't click it. Good luck!");
+        </script>
+    </head>
+    <body style="background-color:black">
+        <script>
+            document.captureEvents(Event.MOUSEMOVE);
+            document.captureEvents(Event.MOUSEDOWN);
+            document.captureEvents(Event.KEYUP);
+            document.captureEvents(Event.KEYDOWN);
+            var mouseClicked, keyUp;
+            document.onmousemove = mousePos;
+            document.onmousedown = mouseClicked;
+            document.onkeyup = keyUp;
+            document.onkeydown = keyDown;
+            var mousePos = function() {
+                mouseX = event.pageX;
+                mouseY = event.pageY;
+            };
+            var mouseClicked = function() {
+                if(liveGame) {
+                    if (keys[16]) {
+                        if (!(mouseX == 0 && mouseY == 0)) {
+                            var x = Math.floor(mouseX / 25);
+                            var y = Math.floor(mouseY / 25);
+                            if (x >= 0 && x < x_size && y >= 0 && y < y_size) {
+                                if (!revealed[y][x]) {
+                                    var element = document.getElementById("f" + x + "-" + y);
+                                    if (flagged[y][x]) {
+                                        element.style.visibility = "hidden";
+                                    }
+                                    else {
+                                        element.style.visibility = "visible";
+                                    }
+                                    flagged[y][x] = !flagged[y][x];
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        mouseX = event.pageX;
+                        mouseY = event.pageY;
+                        var x = Math.floor(mouseX / 25);
+                        var y = Math.floor(mouseY / 25);
+                        if (x >= 0 && x < x_size && y >= 0 && y < y_size) {
+                            var element = document.getElementById(x + "-" + y);
+                            var element2 = document.getElementById("a" + x + "-" + y);
+                            if (flagged[y][x]) {
+                                return;
+                            }
+                            if (game[y][x] == 1) {
+                                element.className = "mine_cell";
+                                element2.style.display = "block";
+                                liveGame = false;
+                                for (var i = 0; i < y_size; i ++) {
+                                    for (var j = 0; j < x_size; j ++) {
+                                        console.log(game[i][j]);
+                                        if (game[i][j] == 1 && !flagged[i][j]) {
+                                            var currElement = document.getElementById(j + "-" + i);
+                                            var currElement2 = document.getElementById("a" + j + "-" + i);
+                                            var currElement3 = document.getElementById("f" + j + "-" + i);
+                                            currElement.className = "mine_cell";
+                                            currElement2.style.display = "block";
+                                            currElement3.style.visibility = "hidden";
+                                        }
+                                    }
+                                }
+                                window.alert("You Lose! Reload to play again.");
+                            }  
+                            else if (!revealed[y][x]) {
+                                element.className = "selected_cell";
+                                element2.style.display = "block";
+                                revealed[y][x] = true;
+                                var atRest = false;
+                                while(!atRest) {
+                                    atRest = true;
+                                    for (var i = 0; i < y_size; i ++) {
+                                        for (var j = 0; j < x_size; j ++) {
+                                            //console.log(revealed[i][j] + ", " + flooded[i][j] + ", " + (text_grid[i][j] == ""));
+                                            if(revealed[i][j] && !flooded[i][j] && text_grid[i][j] == "") {
+                                                if (i > 0) {
+                                                    var x_ = j;
+                                                    var y_ = i - 1;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (i > 0 && j > 0) {
+                                                    var x_ = j - 1;
+                                                    var y_ = i - 1;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (i > 0 && j < x_size - 1) {
+                                                    var x_ = j + 1;
+                                                    var y_ = i - 1;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (i < y_size - 1) {
+                                                    var x_ = j;
+                                                    var y_ = i + 1;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (i < y_size - 1 && j > 0) {
+                                                    var x_ = j - 1;
+                                                    var y_ = i + 1;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (i < y_size - 1 && j < x_size - 1) {
+                                                    var x_ = j + 1;
+                                                    var y_ = i + 1;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (j > 0) {
+                                                    var x_ = j - 1;
+                                                    var y_ = i;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                if (j < x_size - 1) {
+                                                    var x_ = j + 1;
+                                                    var y_ = i;
+                                                    revealed[y_][x_] = true;
+                                                    var curr_element = document.getElementById(x_ + "-" + y_);
+                                                    var curr_element2 = document.getElementById("a" + x_ + "-" + y_);
+                                                    var curr_element3 = document.getElementById("f" + x_ + "-" + y_);
+                                                    curr_element.className = "selected_cell";
+                                                    curr_element2.style.display = "block";
+                                                    curr_element3.style.visibility = "hidden";
+                                                }
+                                                flooded[i][j] = true;
+                                                atRest = false;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var keyUp = function() {
+                keys[event.keyCode] = false;
+            };
+            var keyDown = function() {
+                keys[event.keyCode] = true;
+            };
+            for (var i = 0; i < y_size; i ++) {
+                for (var j = 0; j < x_size; j ++) {
+                    var pos_x = j * 25 + 1;
+                    var pos_y = i * 25 + 1;
+                    document.write("<div class=\"unselected_cell\" id=\"" + j + "-" + i + "\" style=\"width: 23px; height:23px; position: absolute;left: " + pos_x + "px;top: " + pos_y + "px\"><span id=\"a" + j + "-" + i + "\" style=\"display:none;position:relative;top:2px\"><b>" + text_grid[i][j] + "</b></span></div>");
+                }
+            }
+            for (var i = 0; i < y_size; i ++) {
+                for (var j = 0; j < x_size; j ++) {
+                    var pos_x = j * 25 + 1;
+                    var pos_y = i * 25 + 1;
+                    document.write("<img src=\"images/flag.png\" id=\"f" + j + "-" + i + "\" style=\"width: 23px; height: 23px; position: absolute; visibility: hidden;left: " + pos_x + "px;top: " + pos_y + "px \">");
+                }
+            }
+            addEventListener('mousemove', mousePos, false);
+            addEventListener('click', mouseClicked, false);
+            addEventListener('keyup', keyUp, false);
+            addEventListener('keydown', keyDown, false);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Grid Board Test</title>
+        <style>
+            .button-off {
+                background-color: black;
+                margin: 0px;
+            }
+            .button-on {
+                background-color: yellow;
+                margin: 0px;
+            }
+            .button-on:hover {
+                background-color: #ffff80;
+                margin: 0px;
+            }
+            .button-off:hover {
+                background-color: #808080;
+            }
+            /*.button_on {
+
+            }*/
+        </style>
+        <script>
+            var mouseX = 0, mouseY = 0;
+            var findNeighbors = function(grid, x, y) {
+                var neighbors = 0;
+                if (x > 0) {
+                    neighbors += grid[x - 1][y]
+                    if(y > 0) {
+                        neighbors += grid[x - 1][y - 1] 
+                    }
+                    if(y < grid.length - 1) {
+                        neighbors += grid[x - 1][y + 1] 
+                    }
+                }
+                if (x < grid[0].length - 1) {
+                    neighbors += grid[x + 1][y]
+                    if(y > 0) {
+                        neighbors += grid[x + 1][y - 1] 
+                    }
+                    if(y < grid.length - 1) {
+                        neighbors += grid[x + 1][y + 1] 
+                    }
+                }
+                if (y > 0) {
+                    neighbors += grid[x][y - 1]
+                }
+                if (y < grid.length - 1) {
+                    neighbors += grid[x][y + 1]
+                }
+                return neighbors;
+            };
+            var grid = [];
+            for (var i = 0; i < 10; i ++) {
+                grid.push([]);
+                for(var j = 0; j < 10; j ++) {
+                    grid[i].push(0);
+                }
+            }
+            var automatic = false;
+        </script>
+    </head>
+    <body>
+        <form name="position">
+            <input style="border:none;width:fit-content" name="mousex">, <input style="border:none;width:fit-content" name="mousey">
+        </form>
+        <script>
+            document.captureEvents(Event.MOUSEMOVE);
+            document.captureEvents(Event.MOUSEDOWN);
+            var mouseClicked;
+            document.onmousemove = mousePos;
+            document.onmousedown = mouseClicked;
+            var mousePos = function() {
+                mouseX = event.pageX;
+                mouseY = event.pageY;
+                
+                document.position.mousex.value = mouseX;
+                document.position.mousey.value = mouseY;
+            };
+            var mouseClicked = function() {
+                mouseX = event.pageX;
+                mouseY = event.pageY;
+                var offset = window.innerWidth / 2 - 250;
+                var x = Math.floor((mouseX - offset) / 50);
+                var y = Math.floor(mouseY / 50);
+                if (x >= 0 && x < 10 && y >= 0 && y < 10) {
+                    grid[x][y] = 1 - grid[x][y];
+                    var element = document.getElementById(x + "-" + y);
+                    if(grid[x][y] == 1) {
+                        element.className = "button-on";
+                    }
+                    else {
+                        element.className = "button-off";
+                    }
+                }
+            };
+            document.write(window.innerWidth);
+            document.write(window.innerHeight);
+            for (var i = 0; i < 10; i ++) {
+                for (var j = 0; j < 10; j ++) {
+                    var pos_x = i * 50 - 249;
+                    var pos_y = j * 50 + 1;
+                    var pos_x_written = (pos_x < 0) ? "50% - " + (-pos_x) : "50% + " + pos_x;
+                    document.write("<div class=\"button-off\" id=\"" + i + "-" + j + "\" style=\"width: 48px; height:48px; position: absolute;left: calc(" + pos_x_written + "px);top: " + pos_y + "px\"></div>");
+                }
+            }
+            
+            addEventListener('mousemove', mousePos, false);
+            addEventListener('click', mouseClicked, false);
+        </script>
+    </body>
+</html>
